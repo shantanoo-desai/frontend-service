@@ -31,7 +31,8 @@ export class ThreadEventComponent implements OnInit {
             queryParams: {
                 catalogueId: this.event.product.catalogueDocumentReference.id,
                 id: this.event.product.manufacturersItemIdentification.id,
-                pid: this.event.processId
+                pid: this.event.processId,
+                manuId: this.event.product.manufacturerParty.id
             }
         });
     }

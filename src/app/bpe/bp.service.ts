@@ -10,22 +10,27 @@ import 'rxjs/add/operator/catch';
 
 import {BP} from './model/bp';
 import {ProcessConfiguration} from './model/process-configuration';
+import {CookieService} from 'ng2-cookies';
 
 @Injectable()
 export class BPService {
-
-    private headers = new Headers({'Content-Type': 'application/json'});
+    private token = 'Bearer '+this.cookieService.get("bearer_token");
+    private headers = new Headers({'Content-Type': 'application/json', 'Authorization': this.token});
     private options = new RequestOptions({headers: this.headers});
     // private endpoint = 'http://localhost:8081';
     private endpoint = configuration.bpe_endpoint;
     private bpsUrl = this.endpoint + '/content';  // URL to web api
     private configurationUrl = this.endpoint + '/application';  // URL to web api
 
-    constructor(private http: Http) {
+    constructor(private http: Http,
+                private cookieService: CookieService) {
     }
 
     getBPs(): Observable<BP[]> {
-        let bps = this.http.get(this.bpsUrl)
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const url = `${this.bpsUrl}?initiatorInstanceId=${initiatorInstanceId}`;
+        let headers = new Headers({'Authorization': this.token});
+        let bps = this.http.get(url,{headers: headers})
             .map((res: Response) => res.json())
             .catch(this.handleError);
 
@@ -33,46 +38,55 @@ export class BPService {
     }
 
     getBP(processID: string): Observable<BP> {
-        const url = `${this.bpsUrl}/${processID}`;
-        return this.http.get(url)
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        let headers = new Headers({'Authorization': this.token});
+        const url = `${this.bpsUrl}/${processID}?initiatorInstanceId=${initiatorInstanceId}`;
+        return this.http.get(url,{headers: headers})
             .map((res: Response) => res.json())
             .catch(this.handleError);
     }
 
     delete(processID: string): Observable<void> {
-        const url = `${this.bpsUrl}/${processID}`;
-        return this.http.delete(url)
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        let headers = new Headers({'Authorization': this.token});
+        const url = `${this.bpsUrl}/${processID}?initiatorInstanceId=${initiatorInstanceId}`;
+        return this.http.delete(url,{headers: headers})
             .map((res: Response) => res.json())
             .catch(this.handleError);
     }
 
     create(bp: BP): Observable<BP> {
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const url = `${this.bpsUrl}?initiatorInstanceId=${initiatorInstanceId}`;
         console.log(' Sending business process: ', bp);
         return this.http
-            .post(this.bpsUrl, JSON.stringify(bp), this.options)
+            .post(url, JSON.stringify(bp), this.options)
             .map((res: Response) => res.json())
             .catch(this.handleError);
     }
 
     update(bp: BP): Observable<BP> {
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const url = `${this.bpsUrl}?initiatorInstanceId=${initiatorInstanceId}`;
         return this.http
-            .put(this.bpsUrl, JSON.stringify(bp), this.options)
+            .put(url, JSON.stringify(bp), this.options)
             .map((res: Response) => res.json())
             .catch(this.handleError);
     }
 
     getConfiguration(partnerID: string, processID: string, roleType: string): Observable<ProcessConfiguration> {
+        let headers = new Headers({'Authorization': this.token});
         const url = `${this.configurationUrl}/${partnerID}/${processID}/${roleType}`;
-        return this.http.get(url)
+        return this.http.get(url,{headers: headers})
             .map((res: Response) => res.json())
             .catch(this.handleError);
     }
 
     updateConfiguration(configuration: ProcessConfiguration): Observable<ProcessConfiguration> {
         console.log(' Sending configurations: ', configuration);
-
+        const url = `${this.configurationUrl}`;
         return this.http
-            .put(this.configurationUrl, JSON.stringify(configuration), this.options)
+            .put(url, JSON.stringify(configuration), this.options)
             .map((res: Response) => res.json())
             .catch(this.handleError);
     }

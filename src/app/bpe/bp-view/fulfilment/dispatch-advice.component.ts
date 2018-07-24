@@ -46,12 +46,12 @@ export class DispatchAdviceComponent implements OnInit {
 
     async initDispatchAdvice(){
         this.initiatingDispatchAdvice.submit();
-        const processInstanceGroup = await this.bpeService.getProcessInstanceGroup(this.bpDataService.getRelatedGroupId()) as ProcessInstanceGroup;
+        const processInstanceGroup = await this.bpeService.getProcessInstanceGroup(this.bpDataService.getRelatedGroupId(),this.bpDataService.order.buyerCustomerParty.party.federationInstanceID) as ProcessInstanceGroup;
         let details = [];
         for(let id of processInstanceGroup.processInstanceIDs){
             details.push(await Promise.all([
-                this.bpeService.getLastActivityForProcessInstance(id),
-                this.bpeService.getProcessDetailsHistory(id)]
+                this.bpeService.getLastActivityForProcessInstance(id,this.bpDataService.order.sellerSupplierParty.party.federationInstanceID),
+                this.bpeService.getProcessDetailsHistory(id,this.bpDataService.order.sellerSupplierParty.party.federationInstanceID)]
             ));
         }
         details = details.sort(function(a,b){
@@ -143,7 +143,7 @@ export class DispatchAdviceComponent implements OnInit {
         let piim: ProcessInstanceInputMessage = new ProcessInstanceInputMessage(vars, "");
 
         this.callStatus.submit();
-        this.bpeService.startBusinessProcess(piim)
+        this.bpeService.startBusinessProcess(piim,dispatchAdvice.despatchSupplierParty.party.federationInstanceID,dispatchAdvice.deliveryCustomerParty.party.federationInstanceID)
             .then(res => {
                 this.callStatus.callback("Dispatch Advice sent", true);
                 this.router.navigate(['dashboard']);

@@ -14,6 +14,7 @@ import {DocumentReference} from "../../../catalogue/model/publish/document-refer
 import {Attachment} from "../../../catalogue/model/publish/attachment";
 import {ActivityVariableParser} from "../activity-variable-parser";
 import { Location } from "@angular/common";
+import {UserService} from '../../../user-mgmt/user.service';
 
 @Component({
     selector: "ppap-document-upload",
@@ -40,6 +41,7 @@ export class PpapDocumentUploadComponent {
         private bpeService: BPEService,
         private route: ActivatedRoute,
         private router: Router,
+        private userService: UserService,
         private location: Location) {
     
     }
@@ -47,16 +49,19 @@ export class PpapDocumentUploadComponent {
     ngOnInit() {
         this.route.queryParams.subscribe(params =>{
             this.processid = params['pid'];
+            let manuId = params['manuId'];
+            this.userService.getParty(manuId).then(party => {
+                this.bpeService.getProcessDetailsHistory(this.processid,party.federationInstanceID).then(task => {
+                    this.ppap = ActivityVariableParser.getInitialDocument(task).value as Ppap;
+                    let i = 0;
+                    this.documents = [];
+                    for(;i<this.ppap.documentType.length;i++){
+                        this.documents.push(this.ppap.documentType[i]);
+                    }
+                    this.note = this.ppap.note;
+                });
+            })
 
-            this.bpeService.getProcessDetailsHistory(this.processid).then(task => {
-                this.ppap = ActivityVariableParser.getInitialDocument(task).value as Ppap;
-                let i = 0;
-                this.documents = [];
-                for(;i<this.ppap.documentType.length;i++){
-                    this.documents.push(this.ppap.documentType[i]);
-                }
-                this.note = this.ppap.note;
-            });
         });
     }
 
@@ -123,7 +128,7 @@ export class PpapDocumentUploadComponent {
         let piim: ProcessInstanceInputMessage = new ProcessInstanceInputMessage(vars, this.bpDataService.processMetadata.processId);
 
         this.callStatus.submit();
-        this.bpeService.continueBusinessProcess(piim).then(
+        this.bpeService.continueBusinessProcess(piim,this.ppap.buyerCustomerParty.party.federationInstanceID,this.ppap.sellerSupplierParty.party.federationInstanceID).then(
             res => {
                 this.callStatus.callback("Ppap Response placed", true);
                 this.router.navigate(['dashboard']);

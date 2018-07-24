@@ -68,7 +68,7 @@ export class ThreadSummaryComponent implements OnInit {
     }
 
     private async fetchThreadEvent(processInstanceId: string): Promise<ThreadEventMetadata> {
-        const activityVariables = await this.bpeService.getProcessDetailsHistory(processInstanceId);
+        const activityVariables = await this.bpeService.getProcessDetailsHistory(processInstanceId,this.cookieService.get("federation_instance_id"));
         const processType = ActivityVariableParser.getProcessType(activityVariables);
         const initialDoc: any = ActivityVariableParser.getInitialDocument(activityVariables);
         const response: any = ActivityVariableParser.getResponse(activityVariables);
@@ -76,8 +76,8 @@ export class ThreadSummaryComponent implements OnInit {
         const processId = initialDoc.processInstanceId;
 
         const [lastActivity, processInstance] = await Promise.all([
-            this.bpeService.getLastActivityForProcessInstance(processId),
-            this.bpeService.getProcessInstanceDetails(processId)]
+            this.bpeService.getLastActivityForProcessInstance(processId,initialDoc.value.sellerSupplierParty.party.federationInstanceID),
+            this.bpeService.getProcessInstanceDetails(processId,initialDoc.value.sellerSupplierParty.party.federationInstanceID)]
         )
 
         const event: ThreadEventMetadata = new ThreadEventMetadata(
@@ -108,7 +108,8 @@ export class ThreadSummaryComponent implements OnInit {
             {
                 queryParams: {
                     catalogueId: item.catalogueDocumentReference.id,
-                    id: item.manufacturersItemIdentification.id
+                    id: item.manufacturersItemIdentification.id,
+                    manuId: item.manufacturerParty.id
                 }
             });
     }

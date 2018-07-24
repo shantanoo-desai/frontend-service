@@ -80,7 +80,7 @@ export class OrderComponent implements OnInit {
         // null check is for checking whether a new order is initialized
         // preceding process id check is for checking whether there is any preceding process before the order
         if(this.order.contract == null && this.bpDataService.precedingProcessId != null) {
-            this.bpeService.constructContractForProcess(this.bpDataService.precedingProcessId).then(contract => {
+            this.bpeService.constructContractForProcess(this.bpDataService.precedingProcessId,this.order.sellerSupplierParty.party.federationInstanceID).then(contract => {
                 this.order.contract = [contract];
 
                 return this.isDataMonitoringDemanded();
@@ -151,7 +151,7 @@ export class OrderComponent implements OnInit {
                 let vars:ProcessVariables = ModelUtils.createProcessVariables("Order", buyerId, sellerId, order, this.bpDataService);
                 let piim:ProcessInstanceInputMessage = new ProcessInstanceInputMessage(vars, "");
 
-                this.bpeService.startBusinessProcess(piim)
+                this.bpeService.startBusinessProcess(piim,buyerParty.federationInstanceID,sellerParty.federationInstanceID)
                     .then(res => {
                         this.callStatus.callback("Order placed", true);
                         this.router.navigate(['dashboard']);
@@ -179,7 +179,7 @@ export class OrderComponent implements OnInit {
         );
 
         this.callStatus.submit();
-        this.bpeService.continueBusinessProcess(piim)
+        this.bpeService.continueBusinessProcess(piim,this.bpDataService.order.buyerCustomerParty.party.federationInstanceID,this.bpDataService.order.sellerSupplierParty.party.federationInstanceID)
             .then(res => {
                 this.callStatus.callback("Order Response placed", true);
                 this.router.navigate(['dashboard']);
@@ -288,7 +288,7 @@ export class OrderComponent implements OnInit {
  
         if (docClause) {
             this.fetchDataMonitoringStatus.submit();
-            return this.bpeService.getDocumentJsonContent(docClause.clauseDocumentRef.id).then(result => {
+            return this.bpeService.getDocumentJsonContent(docClause.clauseDocumentRef.id,this.order.sellerSupplierParty.party.federationInstanceID).then(result => {
                 this.fetchDataMonitoringStatus.callback("Successfully fetched data monitoring service", true);
                 const q: Quotation = result as Quotation;
                 return q.dataMonitoringPromised;

@@ -8,15 +8,18 @@ import * as myGlobals from '../../globals';
 import {Code} from "../model/publish/code";
 import { ParentCategories } from '../model/category/parent-categories';
 import { sortCategories } from '../../common/utils';
+import {CookieService} from 'ng2-cookies';
 
 @Injectable()
 export class CategoryService {
-    private headers = new Headers({'Accept': 'application/json'});
+    private token = 'Bearer '+this.cookieService.get("bearer_token");
+    private headers = new Headers({'Accept': 'application/json', 'Authorization': this.token});
     private baseUrl = myGlobals.catalogue_endpoint + `/catalogue/category`;
 
     selectedCategories: Category[] = [];
 
-    constructor(private http: Http) {
+    constructor(private http: Http,
+                private cookieService: CookieService) {
     }
 
     getCategoriesByName(keywords: string): Promise<Category[]> {
@@ -105,7 +108,7 @@ export class CategoryService {
     }
 
     getParentCategories(category: Category): Promise<ParentCategories>{
-        const url = `${this.baseUrl}/` + category.taxonomyId + "/" + encodeURIComponent(category.id)+"/tree";
+        const url = `${this.baseUrl}/tree?taxonomyId=${category.taxonomyId}&categoryId=${encodeURIComponent(category.id)}`;
         return this.http
             .get(url, {headers: this.headers})
             .toPromise()
@@ -135,7 +138,7 @@ export class CategoryService {
     }
 
     getChildrenCategories(category: Category): Promise<Category[]>{
-        const url = `${this.baseUrl}/${category.taxonomyId}/${encodeURIComponent(category.id)}/children-categories`;
+        const url = `${this.baseUrl}/children-categories?taxonomyId=${category.taxonomyId}&categoryId=${encodeURIComponent(category.id)}`;
         return this.http
             .get(url, {headers: this.headers})
             .toPromise()

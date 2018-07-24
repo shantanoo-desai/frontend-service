@@ -24,27 +24,23 @@ export class BPEService {
 
 	private headers = new Headers({'Content-Type': 'application/json'});
 	private url = myGlobals.bpe_endpoint;
+	private delegate_url = myGlobals.delegate_bpe_endpoint;
 
 	constructor(private http: Http,
 				private bpDataService:BPDataService,
 				private cookieService: CookieService) { }
 
-	startBusinessProcess(piim:ProcessInstanceInputMessage):Promise<ProcessInstance> {
+	startBusinessProcess(piim:ProcessInstanceInputMessage,initiatorInstanceId:string,targetInstanceId):Promise<ProcessInstance> {
 		const token = 'Bearer '+this.cookieService.get("bearer_token");
 		let headers = new Headers({'Accept': 'application/json','Authorization': token});
 		this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
 
-		let url = `${this.url}/start`;
+		let url = `${this.delegate_url}/start?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		if(this.bpDataService.getRelatedGroupId() != null) {
-			url += '?gid=' + this.bpDataService.getRelatedGroupId();
+			url += '&gid=' + this.bpDataService.getRelatedGroupId();
 		}
 		if(this.bpDataService.precedingProcessId != null) {
-			if(this.bpDataService.getRelatedGroupId() != null) {
-				url += '&';
-			} else {
-				url += '?';
-			}
-			url += 'precedingPid=' + this.bpDataService.precedingProcessId;
+			url += '&precedingPid=' + this.bpDataService.precedingProcessId;
 		}
 
 		return this.http
@@ -58,12 +54,12 @@ export class BPEService {
             .catch(this.handleError);
 	}
 
-	continueBusinessProcess(piim:ProcessInstanceInputMessage):Promise<ProcessInstance> {
+	continueBusinessProcess(piim:ProcessInstanceInputMessage,initiatorInstanceId:string,targetInstanceId):Promise<ProcessInstance> {
 		const token = 'Bearer '+this.cookieService.get("bearer_token");
 		let headers = new Headers({'Accept': 'application/json','Authorization': token});
 		this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
 
-		let url = `${this.url}/continue`;
+		let url = `${this.delegate_url}/continue?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		if(this.bpDataService.getRelatedGroupId() != null) {
 			url += '?gid=' + this.bpDataService.getRelatedGroupId();
 		}
@@ -115,61 +111,82 @@ export class BPEService {
 		.catch(this.handleError);
 	}
 
-	getProcessInstanceGroup(groupId: string){
-		let url:string = `${this.url}/group/${groupId}`;
+	getProcessInstanceGroup(groupId: string,targetInstanceID:string){
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
+		let url:string = `${this.delegate_url}/group/${groupId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceID=${targetInstanceID}`;
 		return this.http
-            .get(url, {headers: this.headers})
+            .get(url, {headers: headers})
             .toPromise()
             .then(res => res.json())
             .catch(this.handleError);
 	}
 
-	getProcessDetailsHistory(id: string): Promise<any> {
-		const url = `${this.url}/rest/engine/default/history/variable-instance?processInstanceIdIn=${id}`;
+	getProcessDetailsHistory(id: string,targetInstanceID:string): Promise<any> {
+		const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
+		const url = `${this.url}/rest/engine/default/history/variable-instance?initiatorInstanceId=${initiatorInstanceId}&targetInstanceID=${targetInstanceID}&processInstanceIdIn=${id}`;
 		return this.http
-		.get(url, {headers: this.headers})
+		.get(url, {headers: headers})
 		.toPromise()
 		.then(res => res.json())
 		.catch(this.handleError);
 	}
 
-	getLastActivityForProcessInstance(processInstanceId: string): Promise<any> {
-		const url = `${this.url}/rest/engine/default/history/activity-instance?processInstanceId=${processInstanceId}&sortBy=startTime&sortOrder=desc&maxResults=1`;
+	getLastActivityForProcessInstance(processInstanceId: string,targetInstanceId:string): Promise<any> {
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
+		const url = `${this.url}/rest/engine/default/history/activity-instance?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}&processInstanceId=${processInstanceId}&sortBy=startTime&sortOrder=desc&maxResults=1`;
 		return this.http
-            .get(url, {headers: this.headers})
+            .get(url, {headers: headers})
             .toPromise()
             .then(res => res.json()[0])
             .catch(this.handleError);
 	}
 
-	getProcessInstanceDetails(processInstanceId: string): Promise<any> {
-		const url = `${this.url}/rest/engine/default/history/process-instance/${processInstanceId}`;
+	getProcessInstanceDetails(processInstanceId: string,targetInstanceId:string): Promise<any> {
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
+		const url = `${this.url}/rest/engine/default/history/process-instance/${processInstanceId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		return this.http
-            .get(url, {headers: this.headers})
+            .get(url, {headers: headers})
             .toPromise()
             .then(res => res.json())
             .catch(this.handleError);
 	}
 
 	getItemInformationRequest(itemInformationResponse: ItemInformationResponse): Promise<ItemInformationRequest> {
-		return this.getDocumentJsonContent(itemInformationResponse.itemInformationRequestDocumentReference.id);
+		return this.getDocumentJsonContent(itemInformationResponse.itemInformationRequestDocumentReference.id,itemInformationResponse.sellerSupplierParty.party.federationInstanceID);
 	}
 
-	getDocumentJsonContent(documentId:string):Promise<any> {
-		const url = `${this.url}/document/json/${documentId}`;
+	getDocumentJsonContent(documentId:string,targetInstanceId:string):Promise<any> {
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
+		const url = `${this.url}/document/json/${documentId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		return this.http
-            .get(url, {headers: this.headers})
+            .get(url, {headers: headers})
             .toPromise()
             .then(res => res.json())
             .catch(this.handleError);
 	}
 
 	getProcessInstanceGroupFilters(partyId:string, collaborationRole: CollaborationRole, archived: boolean, products: string[], categories: string[], partners: string[]): Promise<ProcessInstanceGroupFilter> {
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
 		const token = 'Bearer '+this.cookieService.get("bearer_token");
 		let headers = new Headers({'Accept': 'application/json','Authorization': token});
 		this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
 
-		let url:string = `${this.url}/group/filters?partyID=${partyId}&collaborationRole=${collaborationRole}&archived=${archived}`;
+		let url:string = `${this.url}/group/filters?initiatorInstanceId=${initiatorInstanceId}&partyID=${partyId}&collaborationRole=${collaborationRole}&archived=${archived}`;
 		if(products.length > 0) {
 			url += '&relatedProducts=' + this.stringifyArray(products);
 		}
@@ -187,8 +204,12 @@ export class BPEService {
 	}
 
 	getProcessInstanceGroups(partyId:string, collaborationRole: CollaborationRole, page: number, limit: number, archived: boolean, products: string[], categories: string[], partners: string[]): Promise<ProcessInstanceGroupResponse> {
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+		const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
 		let offset:number = page * limit;
-		let url:string = `${this.url}/group?partyID=${partyId}&collaborationRole=${collaborationRole}&offset=${offset}&limit=${limit}&archived=${archived}`;
+		let url:string = `${this.url}/group?initiatorInstanceId=${initiatorInstanceId}&partyID=${partyId}&collaborationRole=${collaborationRole}&offset=${offset}&limit=${limit}&archived=${archived}`;
 		if(products.length > 0) {
 			url += '&relatedProducts=' + this.stringifyArray(products);
 		}
@@ -199,64 +220,83 @@ export class BPEService {
 			url += '&tradingPartnerIDs=' + this.stringifyArray(partners);
 		}
 		return this.http
-            .get(url, {headers: this.headers})
+            .get(url, {headers: headers})
             .toPromise()
             .then(res => res.json())
             .catch(this.handleError);
 	}
 
 	deleteProcessInstanceGroup(groupId: string) {
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
 		const url = `${this.url}/group/${groupId}`;
 		return this.http
-            .delete(url)
+            .delete(url,{headers: headers})
             .toPromise()
             .then(res => res.json())
             .catch(this.handleError);
 	}
 
 	archiveProcessInstanceGroup(groupId: string) {
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
 		const url = `${this.url}/group/${groupId}/archive`;
 		return this.http
-            .post(url, null)
+            .post(url, null,{headers: headers})
             .toPromise()
             .then(res => res.json())
             .catch(this.handleError);
 	}
 
 	restoreProcessInstanceGroup(groupId: string) {
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
 		const url = `${this.url}/group/${groupId}/restore`;
 		return this.http
-            .post(url, null)
+            .post(url, null,{headers: headers})
             .toPromise()
             .then(res => res.json())
             .catch(this.handleError);
 	}
 
-	constructContractForProcess(processInstancesId: string): Promise<Contract> {
-		const url = `${this.url}/contracts?processInstanceId=${processInstancesId}`;
+	constructContractForProcess(processInstancesId: string,targetInstanceId:string): Promise<Contract> {
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
+		const url = `${this.url}/contracts?processInstanceId=${processInstancesId}&initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		return this.http
-            .get(url, {headers: this.headers})
+            .get(url, {headers: headers})
             .toPromise()
             .then(res => res.json())
             .catch(this.handleError);
 	}
 
-	getClauseDetails(clauseId:string): Promise<Clause> {
-		const url = `${this.url}/clauses/${clauseId}`;
+	getClauseDetails(clauseId:string,targetInstanceID:string): Promise<Clause> {
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
+        const url = `${this.delegate_url}/clauses/${clauseId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceID}`;
 		return this.http
-            .get(url, {headers: this.headers})
+            .get(url, {headers: headers})
             .toPromise()
             .then(res => res.json())
             .catch(this.handleError);
 	}
 
 	downloadContractBundle(id: string): Promise<any> {
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
         const url = `${this.url}/contracts/create-bundle?orderId=${id}`;
         return new Promise<any>((resolve, reject) => {
             let xhr = new XMLHttpRequest();
 
             xhr.open('GET', url, true);
             xhr.setRequestHeader('Accept', 'application/zip');
+            xhr.setRequestHeader('Authorization',token);
             xhr.responseType = 'blob';
 
             xhr.onreadystatechange = function () {
@@ -276,9 +316,12 @@ export class BPEService {
     }
 
     generateOrderTermsAndConditionsAsText(order: Order, buyerParty, sellerParty): Promise<string> {
+        const token = 'Bearer '+this.cookieService.get("bearer_token");
+        let headers = new Headers({'Authorization': token});
+        this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
         const url = `${this.url}/contracts/create-terms?orderId=${order.id}&sellerParty=${JSON.stringify(sellerParty)}&buyerParty=${JSON.stringify(buyerParty)}&incoterms=${order.orderLine[0].lineItem.deliveryTerms.incoterms == null ? "" :order.orderLine[0].lineItem.deliveryTerms.incoterms}&tradingTerms=${encodeURIComponent(JSON.stringify(this.getSelectedTradingTerms(order.paymentTerms.tradingTerms)))}`;
         return this.http
-            .get(url, {headers: this.headers})
+            .get(url, {headers: headers})
             .toPromise()
             .then(res => res.text())
             .catch(this.handleError);

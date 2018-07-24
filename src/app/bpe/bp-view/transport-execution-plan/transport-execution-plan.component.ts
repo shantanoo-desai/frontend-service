@@ -36,7 +36,7 @@ export class TransportExecutionPlanComponent {
         let piim: ProcessInstanceInputMessage = new ProcessInstanceInputMessage(vars, this.bpDataService.processMetadata.processId);
 
         this.callStatus.submit();
-        this.bpeService.continueBusinessProcess(piim).then(
+        this.bpeService.continueBusinessProcess(piim,this.bpDataService.transportExecutionPlan.transportUserParty.federationInstanceID,this.bpDataService.transportExecutionPlan.transportServiceProviderParty.federationInstanceID).then(
             res => {
                 this.callStatus.callback("Transport Execution Plan sent", true);
                 this.router.navigate(['dashboard']);

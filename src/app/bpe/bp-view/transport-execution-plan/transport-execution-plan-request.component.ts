@@ -45,7 +45,7 @@ export class TransportExecutionPlanRequestComponent implements OnInit {
         // TODO instead of checking the transport contract whether it is null or not,
         // pass a query parameter for indicating initiation of a new process
         if(this.transportExecutionPlanRequest.transportContract == null && this.bpDataService.precedingProcessId != null) {
-            this.bpeService.constructContractForProcess(this.bpDataService.precedingProcessId).then(contract => {
+            this.bpeService.constructContractForProcess(this.bpDataService.precedingProcessId,this.transportExecutionPlanRequest.transportServiceProviderParty.federationInstanceID).then(contract => {
                 this.transportExecutionPlanRequest.transportContract = contract;
             });
         }
@@ -55,10 +55,6 @@ export class TransportExecutionPlanRequestComponent implements OnInit {
         this.submitted = true;
         this.callStatus.submit();
         let transportationExecutionPlanRequest:TransportExecutionPlanRequest = JSON.parse(JSON.stringify(this.bpDataService.transportExecutionPlanRequest));
-
-        // get addresses from the address cache
-        transportationExecutionPlanRequest.toLocation.address = this.precedingBPDataService.toAddress;
-        transportationExecutionPlanRequest.fromLocation.address = this.precedingBPDataService.fromAddress;
 
         // final check on the transportationExecutionPlanRequest
         transportationExecutionPlanRequest.mainTransportationService = this.bpDataService.modifiedCatalogueLines[0].goodsItem.item;
@@ -77,7 +73,7 @@ export class TransportExecutionPlanRequestComponent implements OnInit {
                 let vars:ProcessVariables = ModelUtils.createProcessVariables("Transport_Execution_Plan", buyerId, sellerId, transportationExecutionPlanRequest, this.bpDataService);
                 let piim:ProcessInstanceInputMessage = new ProcessInstanceInputMessage(vars, "");
 
-                this.bpeService.startBusinessProcess(piim)
+                this.bpeService.startBusinessProcess(piim,buyerParty.federationInstanceID,sellerParty.federationInstanceID)
                     .then(res => {
                         this.callStatus.callback("Transport Execution Plan sent", true);
                         this.router.navigate(['dashboard']);

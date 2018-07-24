@@ -11,6 +11,8 @@ import { Item } from "../catalogue/model/publish/item";
 import { PriceWrapper } from "../common/price-wrapper";
 import { getMaximumQuantityForPrice, getStepForPrice } from "../common/utils";
 import { AppComponent } from "../app.component";
+import {UserService} from '../user-mgmt/user.service';
+import {CookieService} from 'ng2-cookies';
 
 @Component({
     selector: 'product-details',
@@ -23,6 +25,7 @@ export class ProductDetailsComponent implements OnInit {
 
     id: string;
     catalogueId: string;
+    manuId: string;
 
     options: BpWorkflowOptions = new BpWorkflowOptions();
 
@@ -39,7 +42,9 @@ export class ProductDetailsComponent implements OnInit {
                 private catalogueService: CatalogueService,
                 private route: ActivatedRoute,
                 private router: Router,
-                public appComponent: AppComponent) {
+                public appComponent: AppComponent,
+                public userService: UserService,
+                public cookieService: CookieService) {
         
     }
 
@@ -49,29 +54,32 @@ export class ProductDetailsComponent implements OnInit {
 		this.route.queryParams.subscribe(params => {
 			let id = params['id'];
             let catalogueId = params['catalogueId'];
-            
-            if(id !== this.id || catalogueId !== this.catalogueId) {
+            let manuId = params['manuId'];
+            if(id !== this.id || catalogueId !== this.catalogueId || manuId !== this.manuId) {
                 this.id = id;
                 this.catalogueId = catalogueId;
+                this.manuId = manuId;
 
-                this.catalogueService.getCatalogueLine(catalogueId, id).then(line => {
-                    this.line = line;
-                    this.item = line.goodsItem.item;
-                    this.wrapper = new ProductWrapper(line);
-                    this.priceWrapper = new PriceWrapper(this.line.requiredItemLocationQuantity.price);
-                    this.bpDataService.resetBpData();
-                    this.bpDataService.setCatalogueLines([line]);
-                    this.bpDataService.userRole = 'buyer';
-                    this.bpDataService.workflowOptions = this.options;
-                    this.bpDataService.setRelatedGroupId(null);
-                    this.getProductStatus.callback("Retrieved product details", true);
-                }).catch(error => {
-                    this.getProductStatus.error("Failed to retrieve product details");
-                    console.log("Error while retrieving product", error);
+                this.userService.getParty(manuId).then(party => {
+                    this.catalogueService.getCatalogueLine(catalogueId, id, party.federationInstanceID).then(line => {
+                        this.line = line;
+                        this.item = line.goodsItem.item;
+                        this.wrapper = new ProductWrapper(line);
+                        this.priceWrapper = new PriceWrapper(this.line.requiredItemLocationQuantity.price);
+                        this.bpDataService.resetBpData();
+                        this.bpDataService.setCatalogueLines([line]);
+                        this.bpDataService.userRole = 'buyer';
+                        this.bpDataService.workflowOptions = this.options;
+                        this.bpDataService.setRelatedGroupId(null);
+                        this.getProductStatus.callback("Retrieved product details", true);
+                    }).catch(error => {
+                        this.getProductStatus.error("Failed to retrieve product details");
+                        console.log("Error while retrieving product", error);
 
-                    this.line = null;
-                    this.wrapper = null;
-                });
+                        this.line = null;
+                        this.wrapper = null;
+                    });
+                })
             }
 		});
     }
@@ -98,7 +106,8 @@ export class ProductDetailsComponent implements OnInit {
         this.router.navigate(['bpe/bpe-exec'], {
             queryParams: {
                 catalogueId: this.catalogueId,
-                id: this.id
+                id: this.id,
+                manuId: this.manuId
             }
         });
     }

@@ -9,6 +9,8 @@ export class SimpleSearchService {
 
 	private headers = new Headers({'Content-Type': 'application/json'});
 	private url = myGlobals.simple_search_endpoint;
+
+	private url_bpe = myGlobals.bpe_endpoint;
 	private facetMin = myGlobals.facet_min;
 
 	product_name = myGlobals.product_name;
@@ -24,7 +26,7 @@ export class SimpleSearchService {
 	constructor(private http: Http) { }
 
 	getFields(): Promise<any> {
-		const url = `${this.url}/select?q=*:*&rows=0&wt=csv`;
+		const url = `${this.url_bpe}/search/fields`;
 		return this.http
 		.get(url, {headers: this.headers})
 		.toPromise()
@@ -35,7 +37,7 @@ export class SimpleSearchService {
 	get(query: string, facets: [string], facetQueries: [string], page: number, cat: string): Promise<any> {
 		query = query.replace(/[!'()]/g, '');
 		var start = page*10-10;
-		const url = `${this.url}/select?q=${query}&start=${start}&facet=true&sort=score%20desc&rows=10&facet.sort=count&facet.mincount=${this.facetMin}&json.nl=map&wt=json`;
+		const url = `${this.url_bpe}/search/query?query=${query}&page=${page}&facets=${facets}&facetQueries=${facetQueries}&federated=${true}`;
 		var full_url = url + "";
 		for (let facet of facets) {
 			if (facet.length === 0 || !facet.trim()) {}
@@ -57,7 +59,7 @@ export class SimpleSearchService {
 	}
 
 	getSingle(id: string): Promise<any> {
-		const url = `${this.url}/select?q=*&rows=1&wt=json&fq=item_id:${id}`;
+		const url = `${this.url_bpe}/select?q=*&rows=1&wt=json&fq=item_id:${id}`;
 		return this.http
 		.get(url, {headers: this.headers})
 		.toPromise()

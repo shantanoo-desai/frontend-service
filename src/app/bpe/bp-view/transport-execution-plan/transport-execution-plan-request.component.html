@@ -25,7 +25,9 @@
 
         <shipment-view [showCarrierPartyDetails]="bpDataService?.userRole != 'buyer'"
                        [shipment]="transportExecutionPlanRequest.consignment[0].consolidatedShipment[0]"
-                       [presentationMode]="bpDataService.processMetadata == null ? 'edit' : 'view'">
+                       [presentationMode]="bpDataService.processMetadata == null ? 'edit' : 'view'"
+                       [date]="endDate"
+                       [showDate]="false">
         </shipment-view>
     </div>
 
@@ -87,12 +89,13 @@
         <detailed-address-view [propName]="'To Location'"
                        [presentationMode]="bpDataService.processMetadata == null ? 'edit' : 'singlevalue'"
                        [deliveryAddress]="transportExecutionPlanRequest.toLocation.address"
-                       [fetchDefaultDeliveryAddress]="bpDataService.processMetadata == null && bpDataService.previousProcess == null">
+                       [fetchDefaultDeliveryAddress]="bpDataService.processMetadata == null && bpDataService.previousProcess == null && !precedingBPDataService.orderMetadata">
         </detailed-address-view>
     </div>
 
     <ng-container *ngIf="transportExecutionPlanRequest.transportContract && transportExecutionPlanRequest.transportContract?.clause.length > 0">
-        <contract [contract]="transportExecutionPlanRequest.transportContract">
+        <contract [contract]="transportExecutionPlanRequest.transportContract"
+                  [sellerFederationInstanceId]="transportExecutionPlanRequest.transportServiceProviderParty.federationInstanceID">
 
         </contract>
     </ng-container>

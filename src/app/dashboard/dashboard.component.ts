@@ -86,7 +86,7 @@ export class DashboardComponent implements OnInit {
                         //"start_time": new Date(task.startTime).toLocaleDateString() + " " + time_locale
                     });
 
-                    this.bpeService.getProcessDetailsHistory(task.processInstanceId)
+                    this.bpeService.getProcessDetailsHistory(task.processInstanceId,null)
                         .then(activityVariables => {
                             var vContent = "", vNote = "", vStatusCode = "", vActionStatus = "", vActionRequired = false,vBPStatus = "",
                                 vTask_id = "", vProcess_id = "", vStart_time = "", vSellerName = "", vProduct,vStart_time_sortable ="",
@@ -197,7 +197,7 @@ export class DashboardComponent implements OnInit {
                         //"start_time": new Date(task.startTime).toLocaleDateString() + " " + time_locale
                     });
 
-                    this.bpeService.getProcessDetailsHistory(task.processInstanceId)
+                    this.bpeService.getProcessDetailsHistory(task.processInstanceId,null)
                         .then(activityVariables => {
 
                             var vContent = "", vNote = "", vStatusCode= "", vActionStatus = "", vActionRequired = false, vBPStatus = "",
@@ -300,7 +300,8 @@ export class DashboardComponent implements OnInit {
             queryParams: {
                 catalogueId: processMetadata.product.catalogueDocumentReference.id,
                 id: processMetadata.product.manufacturersItemIdentification.id,
-                pid: processMetadata.process_id
+                pid: processMetadata.process_id,
+                manuId: processMetadata.product.manufacturerParty.id
             }
         });
 

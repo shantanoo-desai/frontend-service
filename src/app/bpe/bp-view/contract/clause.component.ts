@@ -4,7 +4,6 @@ import { ItemInformationRequest } from "../../../catalogue/model/publish/item-in
 import { CallStatus } from "../../../common/call-status";
 import { BPEService } from "../../bpe.service";
 import { DocumentClause } from "../../../catalogue/model/publish/document-clause";
-import { ItemInformationResponse } from "../../../catalogue/model/publish/item-information-response";
 
 @Component({
     selector: 'clause',
@@ -12,6 +11,7 @@ import { ItemInformationResponse } from "../../../catalogue/model/publish/item-i
 })
 export class ClauseComponent implements OnInit {
     @Input() clause: Clause = null;
+    @Input() sellerFederationInstanceId:string;
 
     clauseDocument = null;
     itemInformationRequest: ItemInformationRequest;
@@ -26,7 +26,7 @@ export class ClauseComponent implements OnInit {
         if (this.clauseDocument == null) {
             this.clauseDocumentRetrievalStatus.submit();
             let documentClause: DocumentClause = this.clause as DocumentClause;
-            this.bpeService.getDocumentJsonContent(documentClause.clauseDocumentRef.id).then(result => {
+            this.bpeService.getDocumentJsonContent(documentClause.clauseDocumentRef.id,this.sellerFederationInstanceId).then(result => {
                 this.clauseDocument = result;
                 if(this.clause.type === "ITEM_DETAILS") {
                     // fetch the itm information request as well

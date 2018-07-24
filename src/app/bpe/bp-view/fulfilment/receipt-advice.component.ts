@@ -59,7 +59,7 @@ export class ReceiptAdviceComponent implements OnInit {
             vars, this.bpDataService.processMetadata.processId);
 
         this.callStatus.submit();
-        this.bpeService.continueBusinessProcess(piim)
+        this.bpeService.continueBusinessProcess(piim,this.bpDataService.receiptAdvice.despatchSupplierParty.party.federationInstanceID,this.bpDataService.receiptAdvice.deliveryCustomerParty.party.federationInstanceID)
             .then(res => {
                 this.callStatus.callback("Receipt Advice sent", true);
                 this.router.navigate(['dashboard']);

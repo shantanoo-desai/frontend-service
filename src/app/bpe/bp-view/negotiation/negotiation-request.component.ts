@@ -94,7 +94,7 @@ export class NegotiationRequestComponent implements OnInit {
                     const vars: ProcessVariables = ModelUtils.createProcessVariables("Negotiation", buyerId, sellerId, rfq, this.bpDataService);
                     const piim: ProcessInstanceInputMessage = new ProcessInstanceInputMessage(vars, "");
 
-                    this.bpeService.startBusinessProcess(piim)
+                    this.bpeService.startBusinessProcess(piim,buyerParty.federationInstanceID,sellerParty.federationInstanceID)
                         .then(res => {
                             this.callStatus.callback("Terms sent", true);
                             this.router.navigate(['dashboard']);

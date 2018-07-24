@@ -95,7 +95,7 @@ export class UBLModelUtils {
         // price
         let price: Price = this.createPrice();
         // item location quantity
-        let ilq: ItemLocationQuantity = new ItemLocationQuantity(price, []);
+        let ilq: ItemLocationQuantity = new ItemLocationQuantity(price, [new Address()]);
         return ilq;
     }
 
@@ -282,11 +282,15 @@ export class UBLModelUtils {
     public static createRequestForQuotationWithIir(iir: ItemInformationResponse, fromAddress: Address, toAddress: Address, orderMetadata: any): RequestForQuotation {
         let rfq: RequestForQuotation = this.createRequestForQuotation(new NegotiationOptions());
         rfq.requestForQuotationLine[0].lineItem.item = iir.item[0];
-        if(iir.item[0].transportationServiceDetails != null) {
+        if(orderMetadata) {
             rfq.requestForQuotationLine[0].lineItem.delivery[0].shipment.originAddress = fromAddress;
             rfq.requestForQuotationLine[0].lineItem.deliveryTerms.deliveryLocation.address = toAddress;
             rfq.requestForQuotationLine[0].lineItem.delivery[0].shipment.goodsItem[0].item.name = orderMetadata.content.orderLine[0].lineItem.item.name;
             rfq.requestForQuotationLine[0].lineItem.delivery[0].shipment.totalTransportHandlingUnitQuantity = orderMetadata.content.orderLine[0].lineItem.quantity;
+        }
+        else {
+            rfq.requestForQuotationLine[0].lineItem.delivery[0].shipment.originAddress = new Address();
+            rfq.requestForQuotationLine[0].lineItem.deliveryTerms.deliveryLocation.address = new Address();
         }
         this.removeHjidFieldsFromObject(rfq);
         return rfq;
@@ -355,9 +359,15 @@ export class UBLModelUtils {
         transportExecutionPlanRequest.id = this.generateUUID();
         transportExecutionPlanRequest.consignment[0].consolidatedShipment.push(new Shipment());
         transportExecutionPlanRequest.mainTransportationService = iir.item[0];
-        transportExecutionPlanRequest.toLocation.address = toAddress;
-        transportExecutionPlanRequest.fromLocation.address = fromAddress;
-        transportExecutionPlanRequest.consignment[0].consolidatedShipment[0].goodsItem[0].item.name = orderMetadata.content.orderLine[0].lineItem.item.name;
+        if(orderMetadata){
+            transportExecutionPlanRequest.toLocation.address = toAddress;
+            transportExecutionPlanRequest.fromLocation.address = fromAddress;
+            transportExecutionPlanRequest.consignment[0].consolidatedShipment[0].goodsItem[0].item.name = orderMetadata.content.orderLine[0].lineItem.item.name;
+        }
+        else {
+            transportExecutionPlanRequest.toLocation.address = new Address();
+            transportExecutionPlanRequest.fromLocation.address = new Address();
+        }
         this.removeHjidFieldsFromObject(transportExecutionPlanRequest);
         return transportExecutionPlanRequest;
     }

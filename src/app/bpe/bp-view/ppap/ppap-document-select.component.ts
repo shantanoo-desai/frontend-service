@@ -132,7 +132,7 @@ export class PpapDocumentSelectComponent implements OnInit {
                 let vars = ModelUtils.createProcessVariables("Ppap", buyerId, sellerId, this.ppap, this.bpDataService);
                 let piim = new ProcessInstanceInputMessage(vars, "");
                 this.bpeService
-                    .startBusinessProcess(piim)
+                    .startBusinessProcess(piim,buyerParty.federationInstanceID,sellerParty.federationInstanceID)
                     .then(() => {
                         this.callStatus.callback("Ppap request sent", true);
                         this.router.navigate(["dashboard"]);

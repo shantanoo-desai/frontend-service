@@ -118,7 +118,7 @@ export class ProductPublishComponent implements OnInit {
 
         const userId = this.cookieService.get("user_id");
         this.userService.getUserParty(userId).then(party => {
-            this.catalogueService.getCatalogue(userId).then(catalogue => {
+            this.catalogueService.getCatalogue(userId,this.cookieService.get("federation_instance_id")).then(catalogue => {
                 this.initView(party, catalogue);
                 this.publishStateService.publishingStarted = true;
             });
@@ -697,7 +697,7 @@ export class ProductPublishComponent implements OnInit {
 
         let userId = this.cookieService.get("user_id");
         this.userService.getUserParty(userId).then(party => {
-            this.catalogueService.getCatalogueForceUpdate(userId, true).then(catalogue => {
+            this.catalogueService.getCatalogueForceUpdate(userId, true,this.cookieService.get("federation_instance_id")).then(catalogue => {
                 this.catalogueService.catalogue = catalogue;
                 const line = this.catalogueLine;
                 this.catalogueLine = UBLModelUtils.createCatalogueLine(catalogue.uuid, party)

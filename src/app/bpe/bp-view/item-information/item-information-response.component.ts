@@ -74,7 +74,7 @@ export class ItemInformationResponseComponent implements OnInit {
         const piim: ProcessInstanceInputMessage = new ProcessInstanceInputMessage(vars, this.bpDataService.processMetadata.processId);
 
         this.callStatus.submit();
-        this.bpeService.continueBusinessProcess(piim).then(() => {
+        this.bpeService.continueBusinessProcess(piim,this.bpDataService.itemInformationRequest.buyerCustomerParty.party.federationInstanceID,this.bpDataService.itemInformationRequest.sellerSupplierParty.party.federationInstanceID).then(() => {
             this.callStatus.callback("Information Response sent", true);
             this.router.navigate(['dashboard']);
         }).catch(error => {
@@ -105,7 +105,8 @@ export class ItemInformationResponseComponent implements OnInit {
             queryParams: {
                 catalogueId: params.catalogueId,
                 id: params.id,
-                pid: params.pid
+                pid: params.pid,
+                manuId: params.manuId
             }
         });
     }

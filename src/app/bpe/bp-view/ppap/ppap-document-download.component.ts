@@ -8,6 +8,7 @@ import {DocumentReference} from "../../../catalogue/model/publish/document-refer
 import {ActivityVariableParser} from "../activity-variable-parser";
 import { Location } from "@angular/common";
 import { BinaryObject } from "../../../catalogue/model/publish/binary-object";
+import {UserService} from '../../../user-mgmt/user.service';
 
 interface UploadedDocuments {
     [doc: string]: BinaryObject[];
@@ -34,6 +35,7 @@ export class PpapDocumentDownloadComponent{
     constructor(private bpDataService: BPDataService,
                 private bpeService: BPEService,
                 private route: ActivatedRoute,
+                private userService: UserService,
                 private location: Location) {
     }
 
@@ -41,12 +43,15 @@ export class PpapDocumentDownloadComponent{
         if(!this.ppapResponse) {
             this.route.queryParams.subscribe(params =>{
                 const processid = params['pid'];
-    
-                this.bpeService.getProcessDetailsHistory(processid).then(task => {
-                    this.ppap = ActivityVariableParser.getInitialDocument(task).value as Ppap;
-                    this.ppapResponse = ActivityVariableParser.getResponse(task).value as PpapResponse;
-                    this.initFromPpap();
-                });
+                let manuId = params['manuId'];
+                this.userService.getParty(manuId).then(party => {
+                    this.bpeService.getProcessDetailsHistory(processid,party.federationInstanceID).then(task => {
+                        this.ppap = ActivityVariableParser.getInitialDocument(task).value as Ppap;
+                        this.ppapResponse = ActivityVariableParser.getResponse(task).value as PpapResponse;
+                        this.initFromPpap();
+                    });
+                })
+
             });
         } else {
             if(!this.ppap) {

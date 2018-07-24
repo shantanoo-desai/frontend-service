@@ -207,7 +207,7 @@ export class CategorySearchComponent implements OnInit {
     private navigateToPublishingPage():void {
         this.navigating = true;
         let userId = this.cookieService.get("user_id");
-        this.catalogueService.getCatalogue(userId).then(catalogue => {
+        this.catalogueService.getCatalogue(userId,this.cookieService.get("federation_instance_id")).then(catalogue => {
             ProductPublishComponent.dialogBox = true;
             // set isReturnPublish in order not to show confirmation popup
             this.isReturnPublish = true;

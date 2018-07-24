@@ -87,7 +87,7 @@ export class ItemInformationRequestComponent implements OnInit {
                 let vars: ProcessVariables = ModelUtils.createProcessVariables("Item_Information_Request", buyerId, sellerId, itemInformationRequest, this.bpDataService);
                 let piim: ProcessInstanceInputMessage = new ProcessInstanceInputMessage(vars, "");
 
-                this.bpeService.startBusinessProcess(piim)
+                this.bpeService.startBusinessProcess(piim,buyerParty.federationInstanceID,sellerParty.federationInstanceID)
                 .then(() => {
                     this.callStatus.callback("Item Information Request sent", true);
                     this.router.navigate(['dashboard']);

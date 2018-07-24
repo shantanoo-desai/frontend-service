@@ -71,7 +71,7 @@ export class NegotiationResponseComponent implements OnInit {
         let piim: ProcessInstanceInputMessage = new ProcessInstanceInputMessage(vars, this.bpDataService.processMetadata.processId);
 
         this.callStatus.submit();
-        this.bpeService.continueBusinessProcess(piim)
+        this.bpeService.continueBusinessProcess(piim,this.bpDataService.requestForQuotation.buyerCustomerParty.party.federationInstanceID,this.bpDataService.requestForQuotation.sellerSupplierParty.party.federationInstanceID)
             .then(
                 res => {
                     this.callStatus.callback("Quotation sent", true);

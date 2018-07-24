@@ -14,6 +14,7 @@ export class Party {
         public contact:Contact = new Contact(),
         public postalAddress: Address = null,
         public person:Person[] = [new Person()],
-        public certificate: Certificate[] = null
+        public certificate: Certificate[] = null,
+        public federationInstanceID:string = null
     ) {  }
 }

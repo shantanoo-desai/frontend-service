@@ -1,13 +1,16 @@
 import {Injectable} from '@angular/core';
 import * as myGlobals from '../globals';
 import {Headers, Http} from '@angular/http';
+import {CookieService} from 'ng2-cookies';
 
 @Injectable()
 export class UnitService{
-    private headers = new Headers({'Content-Type': 'application/json', 'Accept': 'application/json'});
+    private token = 'Bearer '+this.cookieService.get("bearer_token");
+    private headers = new Headers({ 'Content-Type': 'application/json', 'Accept': 'application/json' ,'Authorization': this.token });
     private baseUrl = myGlobals.catalogue_endpoint;
 
-    constructor(private http: Http) {
+    constructor(private http: Http,
+                private cookieService: CookieService) {
     }
 
     private map = null;
