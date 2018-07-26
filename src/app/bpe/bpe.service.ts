@@ -111,12 +111,12 @@ export class BPEService {
 		.catch(this.handleError);
 	}
 
-	getProcessInstanceGroup(groupId: string,targetInstanceID:string){
+	getProcessInstanceGroup(groupId: string,targetInstanceId:string){
         const initiatorInstanceId = this.cookieService.get("federation_instance_id");
         const token = 'Bearer '+this.cookieService.get("bearer_token");
         let headers = new Headers({'Authorization': token});
         this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
-		let url:string = `${this.delegate_url}/group/${groupId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceID=${targetInstanceID}`;
+		let url:string = `${this.delegate_url}/group/${groupId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		return this.http
             .get(url, {headers: headers})
             .toPromise()
@@ -124,12 +124,12 @@ export class BPEService {
             .catch(this.handleError);
 	}
 
-	getProcessDetailsHistory(id: string,targetInstanceID:string): Promise<any> {
+	getProcessDetailsHistory(id: string,targetInstanceId:string): Promise<any> {
 		const initiatorInstanceId = this.cookieService.get("federation_instance_id");
         const token = 'Bearer '+this.cookieService.get("bearer_token");
         let headers = new Headers({'Authorization': token});
         this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
-		const url = `${this.url}/rest/engine/default/history/variable-instance?initiatorInstanceId=${initiatorInstanceId}&targetInstanceID=${targetInstanceID}&processInstanceIdIn=${id}`;
+		const url = `${this.delegate_url}/rest/engine/default/history/variable-instance?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}&processInstanceIdIn=${id}`;
 		return this.http
 		.get(url, {headers: headers})
 		.toPromise()
@@ -142,7 +142,8 @@ export class BPEService {
         const token = 'Bearer '+this.cookieService.get("bearer_token");
         let headers = new Headers({'Authorization': token});
         this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
-		const url = `${this.url}/rest/engine/default/history/activity-instance?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}&processInstanceId=${processInstanceId}&sortBy=startTime&sortOrder=desc&maxResults=1`;
+		const url = `${this.delegate_url}/rest/engine/default/history/activity-instance?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}&processInstanceId=${processInstanceId}&sortBy=startTime&sortOrder=desc&maxResults=1`;
+		console.log(url);
 		return this.http
             .get(url, {headers: headers})
             .toPromise()
@@ -155,7 +156,7 @@ export class BPEService {
         const token = 'Bearer '+this.cookieService.get("bearer_token");
         let headers = new Headers({'Authorization': token});
         this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
-		const url = `${this.url}/rest/engine/default/history/process-instance/${processInstanceId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
+		const url = `${this.delegate_url}/rest/engine/default/history/process-instance/${processInstanceId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		return this.http
             .get(url, {headers: headers})
             .toPromise()
@@ -182,11 +183,12 @@ export class BPEService {
 
 	getProcessInstanceGroupFilters(partyId:string, collaborationRole: CollaborationRole, archived: boolean, products: string[], categories: string[], partners: string[]): Promise<ProcessInstanceGroupFilter> {
         const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const targetInstanceId = initiatorInstanceId;
 		const token = 'Bearer '+this.cookieService.get("bearer_token");
 		let headers = new Headers({'Accept': 'application/json','Authorization': token});
 		this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
 
-		let url:string = `${this.url}/group/filters?initiatorInstanceId=${initiatorInstanceId}&partyID=${partyId}&collaborationRole=${collaborationRole}&archived=${archived}`;
+		let url:string = `${this.delegate_url}/group/filters?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}&partyID=${partyId}&collaborationRole=${collaborationRole}&archived=${archived}&federated=true`;
 		if(products.length > 0) {
 			url += '&relatedProducts=' + this.stringifyArray(products);
 		}
@@ -205,11 +207,12 @@ export class BPEService {
 
 	getProcessInstanceGroups(partyId:string, collaborationRole: CollaborationRole, page: number, limit: number, archived: boolean, products: string[], categories: string[], partners: string[]): Promise<ProcessInstanceGroupResponse> {
         const initiatorInstanceId = this.cookieService.get("federation_instance_id");
+        const targetInstanceId = initiatorInstanceId;
 		const token = 'Bearer '+this.cookieService.get("bearer_token");
         let headers = new Headers({'Authorization': token});
         this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
 		let offset:number = page * limit;
-		let url:string = `${this.url}/group?initiatorInstanceId=${initiatorInstanceId}&partyID=${partyId}&collaborationRole=${collaborationRole}&offset=${offset}&limit=${limit}&archived=${archived}`;
+		let url:string = `${this.delegate_url}/group?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}&&partyID=${partyId}&collaborationRole=${collaborationRole}&offset=${offset}&limit=${limit}&archived=${archived}&federated=true`;
 		if(products.length > 0) {
 			url += '&relatedProducts=' + this.stringifyArray(products);
 		}
@@ -275,12 +278,12 @@ export class BPEService {
             .catch(this.handleError);
 	}
 
-	getClauseDetails(clauseId:string,targetInstanceID:string): Promise<Clause> {
+	getClauseDetails(clauseId:string,targetInstanceId:string): Promise<Clause> {
         const initiatorInstanceId = this.cookieService.get("federation_instance_id");
         const token = 'Bearer '+this.cookieService.get("bearer_token");
         let headers = new Headers({'Authorization': token});
         this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
-        const url = `${this.delegate_url}/clauses/${clauseId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceID}`;
+        const url = `${this.delegate_url}/clauses/${clauseId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		return this.http
             .get(url, {headers: headers})
             .toPromise()

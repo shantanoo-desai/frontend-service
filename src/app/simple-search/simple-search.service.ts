@@ -3,14 +3,15 @@ import { Headers, Http } from '@angular/http';
 import 'rxjs/add/operator/toPromise';
 import * as myGlobals from '../globals';
 import { map } from 'rxjs/operators';
+import {CookieService} from 'ng2-cookies';
 
 @Injectable()
 export class SimpleSearchService {
-
+    private token = 'Bearer '+this.cookieService.get("bearer_token");
 	private headers = new Headers({'Content-Type': 'application/json'});
+    private headers_aut = new Headers({'Content-Type': 'application/json','Authorization':this.token});
 	private url = myGlobals.simple_search_endpoint;
-
-	private url_bpe = myGlobals.bpe_endpoint;
+	private url_bpe = myGlobals.bpe_endpoint+"/delegate";
 	private facetMin = myGlobals.facet_min;
 
 	product_name = myGlobals.product_name;
@@ -23,21 +24,25 @@ export class SimpleSearchService {
 	product_cat = myGlobals.product_cat;
 	product_cat_mix = myGlobals.product_cat_mix;
 
-	constructor(private http: Http) { }
+	constructor(private http: Http,
+				private cookieService: CookieService) { }
 
 	getFields(): Promise<any> {
-		const url = `${this.url_bpe}/search/fields`;
+		const federationInstanceId = this.cookieService.get("federation_instance_id");
+		const url = `${this.url_bpe}/search/fields?initiatorInstanceId=${federationInstanceId}&targetInstanceId=${federationInstanceId}`;
+
 		return this.http
-		.get(url, {headers: this.headers})
+		.get(url, {headers: this.headers_aut})
 		.toPromise()
 		.then(res => res)
 		.catch(this.handleError);
 	}
 
 	get(query: string, facets: [string], facetQueries: [string], page: number, cat: string): Promise<any> {
+        const federationInstanceId = this.cookieService.get("federation_instance_id");
 		query = query.replace(/[!'()]/g, '');
 		var start = page*10-10;
-		const url = `${this.url_bpe}/search/query?query=${query}&page=${page}&facets=${facets}&facetQueries=${facetQueries}&federated=${true}`;
+		const url = `${this.url_bpe}/search/query?initiatorInstanceId=${federationInstanceId}&targetInstanceId=${federationInstanceId}&query=${query}&page=${page}&facets=${facets}&facetQueries=${facetQueries}&federated=${true}`;
 		var full_url = url + "";
 		for (let facet of facets) {
 			if (facet.length === 0 || !facet.trim()) {}
@@ -52,16 +57,17 @@ export class SimpleSearchService {
 			full_url += "&fq="+encodeURIComponent(add_url);
 		}
 		return this.http
-		.get(full_url, {headers: this.headers})
+		.get(full_url, {headers: this.headers_aut})
 		.toPromise()
 		.then(res => res.json())
 		.catch(this.handleError);
 	}
 
 	getSingle(id: string): Promise<any> {
-		const url = `${this.url_bpe}/select?q=*&rows=1&wt=json&fq=item_id:${id}`;
+        const federationInstanceId = this.cookieService.get("federation_instance_id");
+		const url = `${this.url_bpe}/select?initiatorInstanceId=${federationInstanceId}&targetInstanceId=${federationInstanceId}&q=*&rows=1&wt=json&fq=item_id:${id}`;
 		return this.http
-		.get(url, {headers: this.headers})
+		.get(url, {headers: this.headers_aut})
 		.toPromise()
 		.then(res => res.json())
 		.catch(this.handleError);

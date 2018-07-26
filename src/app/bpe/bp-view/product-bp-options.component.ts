@@ -10,6 +10,7 @@ import { ProductWrapper } from "../../common/product-wrapper";
 import { BpWorkflowOptions } from "../model/bp-workflow-options";
 import { ProcessType } from "../model/process-type";
 import { ProductBpStep } from "./product-bp-step";
+import {UserService} from '../../user-mgmt/user.service';
 
 /**
  * Created by suat on 20-Oct-17.
@@ -37,7 +38,8 @@ export class ProductBpOptionsComponent implements OnInit, OnDestroy {
     constructor(public bpDataService: BPDataService, 
                 public catalogueService: CatalogueService, 
                 public route: ActivatedRoute,
-                private renderer: Renderer2) {
+                private renderer: Renderer2,
+                public userService: UserService) {
                     this.renderer.setStyle(document.body, "background-image", "none");
                 }
 
@@ -59,20 +61,22 @@ export class ProductBpOptionsComponent implements OnInit, OnDestroy {
                 this.catalogueId = catalogueId;
 
                 this.callStatus.submit();
-                this.catalogueService
-                    .getCatalogueLine(catalogueId, id,manuId)
-                    .then(line => {
-                        this.line = line;
-                        this.wrapper = new ProductWrapper(line);
-                        this.bpDataService.setCatalogueLines([line]);
-                        this.callStatus.callback("Retrieved product details", true);
-                        this.bpDataService.computeWorkflowOptions();
-                        this.options = this.bpDataService.workflowOptions;
-                    })
-                    .catch(error => {
-                        this.callStatus.error("Failed to retrieve product details");
-                        console.log("Error while fetching catalogue", error);
-                    });
+                this.userService.getParty(manuId).then(party => {
+                    this.catalogueService
+                        .getCatalogueLine(catalogueId, id,party.federationInstanceID)
+                        .then(line => {
+                            this.line = line;
+                            this.wrapper = new ProductWrapper(line);
+                            this.bpDataService.setCatalogueLines([line]);
+                            this.callStatus.callback("Retrieved product details", true);
+                            this.bpDataService.computeWorkflowOptions();
+                            this.options = this.bpDataService.workflowOptions;
+                        })
+                        .catch(error => {
+                            this.callStatus.error("Failed to retrieve product details");
+                            console.log("Error while fetching catalogue", error);
+                        });
+                })
             }
         });
     }
