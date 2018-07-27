@@ -11,6 +11,7 @@ import { DataChannelService } from "../data-channel/data-channel.service";
 import { ProcessType } from "../bpe/model/process-type";
 import { ThreadEventMetadata } from "../catalogue/model/publish/thread-event-metadata";
 import { ThreadEventStatus } from "../catalogue/model/publish/thread-event-status";
+import {ProcessInstanceFederation} from '../bpe/model/process-instance-federation';
 
 /**
  * Created by suat on 12-Mar-18.
@@ -47,7 +48,7 @@ export class ThreadSummaryComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.eventCount = this.processInstanceGroup.processInstanceIDs.length;
+        this.eventCount = this.getProcessInstanceIDs(this.processInstanceGroup).length;
         this.hasHistory = this.eventCount > 1;
         this.fetchEvents();
     }
@@ -57,8 +58,7 @@ export class ThreadSummaryComponent implements OnInit {
     }
 
     private fetchEvents(): void {
-        const ids = this.processInstanceGroup.processInstanceIDs;
-        Promise.all(ids.map(id => this.fetchThreadEvent(id))).then(events => {
+        Promise.all(this.processInstanceGroup.processInstances.map(processInstance => this.fetchThreadEvent(processInstance))).then(events => {
             events.sort((a,b) => moment(a.startTime).diff(moment(b.startTime)));
             events = events.reverse();
             this.history = events.slice(1, events.length);
@@ -67,8 +67,16 @@ export class ThreadSummaryComponent implements OnInit {
         });
     }
 
-    private async fetchThreadEvent(processInstanceId: string): Promise<ThreadEventMetadata> {
-        const activityVariables = await this.bpeService.getProcessDetailsHistory(processInstanceId,this.cookieService.get("federation_instance_id"));
+    getProcessInstanceIDs(processInstanceGroup:ProcessInstanceGroup): string[] {
+        let processInstanceIDs = [];
+        for(let pif of processInstanceGroup.processInstances){
+            processInstanceIDs.push(pif.processInstanceID);
+        }
+        return processInstanceIDs
+    }
+
+    private async fetchThreadEvent(processInstanceFederation:ProcessInstanceFederation): Promise<ThreadEventMetadata> {
+        const activityVariables = await this.bpeService.getProcessDetailsHistory(processInstanceFederation.processInstanceID,processInstanceFederation.federationInstanceId);
         const processType = ActivityVariableParser.getProcessType(activityVariables);
         const initialDoc: any = ActivityVariableParser.getInitialDocument(activityVariables);
         const response: any = ActivityVariableParser.getResponse(activityVariables);
@@ -76,8 +84,8 @@ export class ThreadSummaryComponent implements OnInit {
         const processId = initialDoc.processInstanceId;
 
         const [lastActivity, processInstance] = await Promise.all([
-            this.bpeService.getLastActivityForProcessInstance(processId,initialDoc.value.sellerSupplierParty.party.federationInstanceID),
-            this.bpeService.getProcessInstanceDetails(processId,initialDoc.value.sellerSupplierParty.party.federationInstanceID)]
+            this.bpeService.getLastActivityForProcessInstance(processId,processInstanceFederation.federationInstanceId),
+            this.bpeService.getProcessInstanceDetails(processId,processInstanceFederation.federationInstanceId)]
         )
 
         const event: ThreadEventMetadata = new ThreadEventMetadata(

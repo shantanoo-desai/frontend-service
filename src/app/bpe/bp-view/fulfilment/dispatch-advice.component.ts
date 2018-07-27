@@ -48,7 +48,11 @@ export class DispatchAdviceComponent implements OnInit {
         this.initiatingDispatchAdvice.submit();
         const processInstanceGroup = await this.bpeService.getProcessInstanceGroup(this.bpDataService.getRelatedGroupId(),this.bpDataService.order.buyerCustomerParty.party.federationInstanceID) as ProcessInstanceGroup;
         let details = [];
-        for(let id of processInstanceGroup.processInstanceIDs){
+        let processInstanceIDs = [];
+        for(let pif of processInstanceGroup.processInstances){
+            processInstanceIDs.push(pif.processInstanceID);
+        }
+        for(let id of processInstanceIDs){
             details.push(await Promise.all([
                 this.bpeService.getLastActivityForProcessInstance(id,this.bpDataService.order.sellerSupplierParty.party.federationInstanceID),
                 this.bpeService.getProcessDetailsHistory(id,this.bpDataService.order.sellerSupplierParty.party.federationInstanceID)]
