@@ -61,7 +61,7 @@ export class BPEService {
 
 		let url = `${this.delegate_url}/continue?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		if(this.bpDataService.getRelatedGroupId() != null) {
-			url += '?gid=' + this.bpDataService.getRelatedGroupId();
+			url += '&gid=' + this.bpDataService.getRelatedGroupId();
 		}
 
 		return this.http
