@@ -116,7 +116,7 @@ export class BPEService {
         const token = 'Bearer '+this.cookieService.get("bearer_token");
         let headers = new Headers({'Authorization': token});
         this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
-		let url:string = `${this.delegate_url}/group/${groupId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
+		let url:string = `${this.url}/group/${groupId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		return this.http
             .get(url, {headers: headers})
             .toPromise()
@@ -291,13 +291,14 @@ export class BPEService {
             .catch(this.handleError);
 	}
 
-	downloadContractBundle(id: string): Promise<any> {
+	downloadContractBundle(id: string,targetInstanceId:string): Promise<any> {
+        const initiatorInstanceId = this.cookieService.get("federation_instance_id");
         const token = 'Bearer '+this.cookieService.get("bearer_token");
-        const url = `${this.url}/contracts/create-bundle?orderId=${id}`;
+        const url = `${this.delegate_url}/contracts/create-bundle?orderId=${id}&initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
         return new Promise<any>((resolve, reject) => {
             let xhr = new XMLHttpRequest();
 
-            xhr.open('GET', url, true);
+            xhr.open('POST', url, true);
             xhr.setRequestHeader('Accept', 'application/zip');
             xhr.setRequestHeader('Authorization',token);
             xhr.responseType = 'blob';

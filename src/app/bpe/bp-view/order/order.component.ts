@@ -191,7 +191,7 @@ export class OrderComponent implements OnInit {
 
     onDownloadContact() {
         this.callStatus.submit();
-        this.bpeService.downloadContractBundle(this.order.id)
+        this.bpeService.downloadContractBundle(this.order.id, this.order.sellerSupplierParty.party.federationInstanceID)
             .then(result => {
                 var link = document.createElement('a');
                 link.id = 'downloadLink';
