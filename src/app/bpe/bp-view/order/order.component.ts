@@ -80,7 +80,7 @@ export class OrderComponent implements OnInit {
         // null check is for checking whether a new order is initialized
         // preceding process id check is for checking whether there is any preceding process before the order
         if(this.order.contract == null && this.bpDataService.precedingProcessId != null) {
-            this.bpeService.constructContractForProcess(this.bpDataService.precedingProcessId,this.order.sellerSupplierParty.party.federationInstanceID).then(contract => {
+            this.bpeService.constructContractForProcess(this.bpDataService.precedingProcessId,this.bpDataService.getCatalogueLine().goodsItem.item.manufacturerParty.federationInstanceID).then(contract => {
                 this.order.contract = [contract];
 
                 return this.isDataMonitoringDemanded();
@@ -288,7 +288,7 @@ export class OrderComponent implements OnInit {
  
         if (docClause) {
             this.fetchDataMonitoringStatus.submit();
-            return this.bpeService.getDocumentJsonContent(docClause.clauseDocumentRef.id,this.order.sellerSupplierParty.party.federationInstanceID).then(result => {
+            return this.bpeService.getDocumentJsonContent(docClause.clauseDocumentRef.id,this.bpDataService.getCatalogueLine().goodsItem.item.manufacturerParty.federationInstanceID).then(result => {
                 this.fetchDataMonitoringStatus.callback("Successfully fetched data monitoring service", true);
                 const q: Quotation = result as Quotation;
                 return q.dataMonitoringPromised;

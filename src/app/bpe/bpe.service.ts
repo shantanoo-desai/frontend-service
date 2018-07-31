@@ -173,7 +173,7 @@ export class BPEService {
         const token = 'Bearer '+this.cookieService.get("bearer_token");
         let headers = new Headers({'Authorization': token});
         this.headers.keys().forEach(header => headers.append(header, this.headers.get(header)));
-		const url = `${this.url}/document/json/${documentId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
+		const url = `${this.delegate_url}/document/json/${documentId}?initiatorInstanceId=${initiatorInstanceId}&targetInstanceId=${targetInstanceId}`;
 		return this.http
             .get(url, {headers: headers})
             .toPromise()
