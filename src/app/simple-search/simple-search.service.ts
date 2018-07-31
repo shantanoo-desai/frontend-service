@@ -8,8 +8,7 @@ import {CookieService} from 'ng2-cookies';
 @Injectable()
 export class SimpleSearchService {
     private token = 'Bearer '+this.cookieService.get("bearer_token");
-	private headers = new Headers({'Content-Type': 'application/json'});
-    private headers_aut = new Headers({'Content-Type': 'application/json','Authorization':this.token});
+    private headers = new Headers({'Content-Type': 'application/json','Authorization':this.token});
 	private url = myGlobals.simple_search_endpoint;
 	private url_bpe = myGlobals.bpe_endpoint+"/delegate";
 	private facetMin = myGlobals.facet_min;
@@ -32,66 +31,53 @@ export class SimpleSearchService {
 		const url = `${this.url_bpe}/search/fields?initiatorInstanceId=${federationInstanceId}&targetInstanceId=${federationInstanceId}`;
 
 		return this.http
-		.get(url, {headers: this.headers_aut})
+		.get(url, {headers: this.headers})
 		.toPromise()
 		.then(res => res)
 		.catch(this.handleError);
 	}
 
-	get(query: string, facets: [string], facetQueries: [string], page: number, cat: string): Promise<any> {
+    get(query: string, facets: [string], facetQueries: [string], page: number, cat: string): Promise<any> {
+        facetQueries.push(cat);
         const federationInstanceId = this.cookieService.get("federation_instance_id");
-		query = query.replace(/[!'()]/g, '');
-		var start = page*10-10;
-		const url = `${this.url_bpe}/search/query?initiatorInstanceId=${federationInstanceId}&targetInstanceId=${federationInstanceId}&query=${query}&page=${page}&facets=${facets}&facetQueries=${facetQueries}&federated=${true}`;
-		var full_url = url + "";
-		for (let facet of facets) {
-			if (facet.length === 0 || !facet.trim()) {}
-			else
-				full_url += "&facet.field="+facet;
-		}
-		for (let facetQuery of facetQueries) {
-			full_url += "&fq="+encodeURIComponent(facetQuery);
-		}
-		if (cat != "") {
-			var add_url = `${this.product_cat}:"${cat}"`;
-			full_url += "&fq="+encodeURIComponent(add_url);
-		}
-		return this.http
-		.get(full_url, {headers: this.headers_aut})
-		.toPromise()
-		.then(res => res.json())
-		.catch(this.handleError);
-	}
+        query = query.replace(/[!'()]/g, '');
+        const url = `${this.url_bpe}/search/query?initiatorInstanceId=${federationInstanceId}&targetInstanceId=${federationInstanceId}&query=${query}&page=${page}&facets=${facets}&facetQueries=${facetQueries}&federated=${true}`;
+        return this.http
+            .get(url, {headers: this.headers})
+            .toPromise()
+            .then(res => res.json())
+            .catch(this.handleError);
+    }
 
 	getSingle(id: string): Promise<any> {
         const federationInstanceId = this.cookieService.get("federation_instance_id");
-		const url = `${this.url_bpe}/select?initiatorInstanceId=${federationInstanceId}&targetInstanceId=${federationInstanceId}&q=*&rows=1&wt=json&fq=item_id:${id}`;
+		const url = `${this.url_bpe}/search/select?initiatorInstanceId=${federationInstanceId}&targetInstanceId=${federationInstanceId}&id:${id}`;
 		return this.http
-		.get(url, {headers: this.headers_aut})
+		.get(url, {headers: this.headers})
 		.toPromise()
 		.then(res => res.json())
 		.catch(this.handleError);
 	}
 
-	getSuggestions(query:string, facetQueries: [string], cat: string) {
-		query = query.replace(/[!'()]/g, '');
-		const url = `${this.url}/suggest?q=${query}&wt=json`;
-		var full_url = url + "";
-		for (let facetQuery of facetQueries) {
-			full_url += "&fq="+encodeURIComponent(facetQuery);
-		}
-		if (cat != "") {
-			var add_url = `${this.product_cat}:"${cat}"`;
-			full_url += "&fq="+encodeURIComponent(add_url);
-		}
-		return this.http
-		.get(full_url, {headers: this.headers})
-		.pipe(
-			map(response =>
-				this.getSuggestionArray(response,query)
-			)
-		);
-	}
+    getSuggestions(query:string, facetQueries: [string], cat: string) {
+        const federationInstanceId = this.cookieService.get("federation_instance_id");
+        query = query.replace(/[!'()]/g, '');
+        const url = `${this.url_bpe}/search/suggest?initiatorInstanceId=${federationInstanceId}&targetInstanceId=${federationInstanceId}&query=${query}&wt=json&federated=true`;
+        var full_url = url + "";
+        for (let facetQuery of facetQueries) {
+            full_url += "&facets="+encodeURIComponent(facetQuery);
+        }
+        if (cat != "") {
+            var add_url = `${this.product_cat}:"${cat}"`;
+            full_url += "&category="+encodeURIComponent(add_url);
+        }
+        return this.http
+            .get(full_url, {headers: this.headers})
+            .pipe(
+                map(response =>
+                    this.getSuggestionArray(response,query)
+                ));
+    }
 
 	getSuggestionArray(res:any, q:string): string[] {
 		var suggestions=[];
