@@ -47,6 +47,10 @@ export class SimpleSearchFormComponent implements OnInit {
 	response: any;
     // check whether 'p' query parameter exists or not
 	noP = true;
+
+	instances = [];
+	selectedInstance = 0;
+
 	constructor(
 		private simpleSearchService: SimpleSearchService,
 		private searchContextService: SearchContextService,
@@ -125,12 +129,25 @@ export class SimpleSearchFormComponent implements OnInit {
 	getCatTree(): void {
 		this.simpleSearchService.get("*",[this.product_cat_mix],[""],1,"")
 		.then(res => {
-			for (let facet in res.facet_counts.facet_fields) {
-				if (facet == this.product_cat_mix) {
-					this.buildCatTree(res.facet_counts.facet_fields[facet]);
-				}
-			}
+            this.instances = [];
+            for(let inst of res){
+                this.instances.push({
+                    "name":"Instance",
+                    "content":JSON.parse(inst),
+                    "count": JSON.parse(inst).response.numFound
+                });
+            }
+			this.onGetCatTree();
 		});
+	}
+
+	onGetCatTree(){
+        let res = this.instances[this.selectedInstance].content;
+        for (let facet in res.facet_counts.facet_fields) {
+            if (facet == this.product_cat_mix) {
+                this.buildCatTree(res.facet_counts.facet_fields[facet]);
+            }
+        }
 	}
 
 	buildCatTree(mix: any): void {
@@ -218,7 +235,7 @@ export class SimpleSearchFormComponent implements OnInit {
 		this.callback = false;
 		this.error_detc = false;
 		this.submitted = true;
-    this.model.q=q;
+    	this.model.q=q;
 		this.objToSubmit.q=q;
 		this.facetQuery=fq;
 		this.page=p;
@@ -226,87 +243,18 @@ export class SimpleSearchFormComponent implements OnInit {
 		.then(res => {
 			this.simpleSearchService.get(q,res._body.split(","),fq,p,cat)
 			.then(res => {
-				this.facetObj = [];
-				this.temp = [];
-				var index = 0;
-				for (let facet in res.facet_counts.facet_fields) {
-					if (JSON.stringify(res.facet_counts.facet_fields[facet]) != "{}") {
-						if (facet == this.product_cat_mix) {
-							this.buildCatTree(res.facet_counts.facet_fields[facet]);
-						}
-						if (this.simpleSearchService.checkField(facet)) {
-							this.facetObj.push({
-								"name":facet,
-								"options":[],
-								"total":0,
-								"selected":false
-							});
-							for (let facet_inner in res.facet_counts.facet_fields[facet]) {
-								if (facet_inner != "") {
-									this.facetObj[index].options.push({
-										"name":facet_inner,
-										"count":res.facet_counts.facet_fields[facet][facet_inner]
-									});
-									this.facetObj[index].total += res.facet_counts.facet_fields[facet][facet_inner];
-									if (this.checkFacet(this.facetObj[index].name,facet_inner))
-										this.facetObj[index].selected=true;
-								}
-							}
-							this.facetObj[index].options.sort(function(a,b){
-								var a_c = a.name;
-								var b_c = b.name;
-								return a_c.localeCompare(b_c);
-							});
-							this.facetObj[index].options.sort(function(a,b){
-								return b.count-a.count;
-							});
-							index++;
-							this.facetObj.sort(function(a,b){
-								var a_c = a.name;
-								var b_c = b.name;
-								return a_c.localeCompare(b_c);
-							});
-							this.facetObj.sort(function(a,b){
-								return b.total-a.total;
-							});
-							this.facetObj.sort(function(a,b){
-								var ret = 0;
-								if (a.selected && !b.selected)
-									ret = -1;
-								else if (!a.selected && b.selected)
-									ret = 1;
-								return ret;
-							});
-						}
-					}
+				this.instances = [];
+				for(let inst of res){
+					this.instances.push({
+						"name":"Instance",
+						"content":JSON.parse(inst),
+						"count": JSON.parse(inst).response.numFound
+					});
 				}
-				this.temp = res.response.docs;
-				for (let doc in this.temp) {
-					if (this.temp[doc][this.product_img]) {
-						var img = this.temp[doc][this.product_img];
-						if (Array.isArray(img)) {
-							this.temp[doc][this.product_img] = img[0];
-						}
-					}
-				}
-				/*
-				for (let doc in this.temp) {
-					if (this.isJson(this.temp[doc][this.product_img])) {
-						var json = JSON.parse(this.temp[doc][this.product_img]);
-						var img = "";
-						if (json.length > 1)
-							img = "data:"+JSON.parse(this.temp[doc][this.product_img][0])[0].mimeCode+";base64,"+JSON.parse(this.temp[doc][this.product_img][0])[0].value;
-						else
-							img = "data:"+this.temp[doc][this.product_img].mimeCode+";base64,"+this.temp[doc][this.product_img].value;
-						this.temp[doc][this.product_img] = img;
-					}
-				}
-				*/
-				this.response = JSON.parse(JSON.stringify(this.temp));
-				this.size = res.response.numFound;
-				this.page = p;
-				this.start = this.page*10-10+1;
-				this.end = this.start+res.response.docs.length-1;
+
+				this.onGetCall();
+
+                this.page = p;
 				this.callback = true;
 				this.error_detc = false;
 			})
@@ -317,6 +265,90 @@ export class SimpleSearchFormComponent implements OnInit {
 		.catch(error => {
 			this.error_detc = true;
 		});
+	}
+
+	onGetCall(){
+		let res = this.instances[this.selectedInstance].content;
+        this.facetObj = [];
+        this.temp = [];
+        var index = 0;
+        for (let facet in res.facet_counts.facet_fields) {
+            if (JSON.stringify(res.facet_counts.facet_fields[facet]) != "{}") {
+                if (facet == this.product_cat_mix) {
+                    this.buildCatTree(res.facet_counts.facet_fields[facet]);
+                }
+                if (this.simpleSearchService.checkField(facet)) {
+                    this.facetObj.push({
+                        "name":facet,
+                        "options":[],
+                        "total":0,
+                        "selected":false
+                    });
+                    for (let facet_inner in res.facet_counts.facet_fields[facet]) {
+                        if (facet_inner != "") {
+                            this.facetObj[index].options.push({
+                                "name":facet_inner,
+                                "count":res.facet_counts.facet_fields[facet][facet_inner]
+                            });
+                            this.facetObj[index].total += res.facet_counts.facet_fields[facet][facet_inner];
+                            if (this.checkFacet(this.facetObj[index].name,facet_inner))
+                                this.facetObj[index].selected=true;
+                        }
+                    }
+                    this.facetObj[index].options.sort(function(a,b){
+                        var a_c = a.name;
+                        var b_c = b.name;
+                        return a_c.localeCompare(b_c);
+                    });
+                    this.facetObj[index].options.sort(function(a,b){
+                        return b.count-a.count;
+                    });
+                    index++;
+                    this.facetObj.sort(function(a,b){
+                        var a_c = a.name;
+                        var b_c = b.name;
+                        return a_c.localeCompare(b_c);
+                    });
+                    this.facetObj.sort(function(a,b){
+                        return b.total-a.total;
+                    });
+                    this.facetObj.sort(function(a,b){
+                        var ret = 0;
+                        if (a.selected && !b.selected)
+                            ret = -1;
+                        else if (!a.selected && b.selected)
+                            ret = 1;
+                        return ret;
+                    });
+                }
+            }
+        }
+        this.temp = res.response.docs;
+        for (let doc in this.temp) {
+            if (this.temp[doc][this.product_img]) {
+                var img = this.temp[doc][this.product_img];
+                if (Array.isArray(img)) {
+                    this.temp[doc][this.product_img] = img[0];
+                }
+            }
+        }
+        /*
+        for (let doc in this.temp) {
+            if (this.isJson(this.temp[doc][this.product_img])) {
+                var json = JSON.parse(this.temp[doc][this.product_img]);
+                var img = "";
+                if (json.length > 1)
+                    img = "data:"+JSON.parse(this.temp[doc][this.product_img][0])[0].mimeCode+";base64,"+JSON.parse(this.temp[doc][this.product_img][0])[0].value;
+                else
+                    img = "data:"+this.temp[doc][this.product_img].mimeCode+";base64,"+this.temp[doc][this.product_img].value;
+                this.temp[doc][this.product_img] = img;
+            }
+        }
+        */
+        this.response = JSON.parse(JSON.stringify(this.temp));
+        this.size = res.response.numFound;
+        this.start = this.page*10-10+1;
+        this.end = this.start+res.response.docs.length-1;
 	}
 
 	onSubmit() {
@@ -350,6 +382,16 @@ export class SimpleSearchFormComponent implements OnInit {
 	setCat(name:string) {
 		this.cat = name;
 		this.get(this.objToSubmit);
+	}
+
+	setInstance(index:number,catTree:boolean) {
+		this.selectedInstance = index;
+		if(catTree){
+			this.onGetCatTree();
+		}
+		else{
+            this.onGetCall();
+		}
 	}
 
 	resetFilter() {

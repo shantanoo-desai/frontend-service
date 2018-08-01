@@ -18,7 +18,22 @@
 	</div>
 
 	<div *ngIf="(cat_levels.length>0 && (cat_levels[0].length>0 || cat_levels[1].length>0 || cat_levels[2].length>0 || cat_levels[3].length>0)) || cat_other.length>0" [hidden]="submitted">
-		<div class="card border-primary-nimble">
+        <div class="card border-primary-nimble space-after">
+            <div class="card-header text-white bg-primary-nimble">
+                Nimble Instances
+            </div>
+            <div class="card-body">
+                <div *ngFor="let i of instances;let ind = index">
+                    <div *ngIf="selectedInstance == ind">
+                        <span class="clickable" (click)="setInstance(ind,true)"><b>{{i.name}} ({{i.count}})</b></span>
+                    </div>
+                    <div *ngIf="selectedInstance != ind">
+                        <span class="clickable" (click)="setInstance(ind,true)">{{i.name}} ({{i.count}})</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card border-primary-nimble">
 			<div class="card-header text-white bg-primary-nimble">
 				Category
 			</div>
@@ -113,6 +128,22 @@
 					<div *ngIf="cat!=''" class="space-after">
 						<span class="clickable" (click)="setCat('')"><i>Reset category selection</i></span>
 					</div>
+
+                    <div class="card border-primary-nimble mb-3">
+                        <div class="card-header text-white bg-primary-nimble">
+                            Nimble Instances
+                        </div>
+                        <div class="card-body">
+                            <div *ngFor="let i of instances;let ind = index">
+                                <div *ngIf="selectedInstance == ind">
+                                    <span class="clickable" (click)="setInstance(ind,false)"><b>{{i.name}} ({{i.count}})</b></span>
+                                </div>
+                                <div *ngIf="selectedInstance != ind">
+                                    <span class="clickable" (click)="setInstance(ind,false)">{{i.name}} ({{i.count}})</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
 					<div class="card border-primary-nimble mb-3">
 						<div class="card-header text-white bg-primary-nimble">
