@@ -18,7 +18,7 @@
 	</div>
 
 	<div *ngIf="(cat_levels.length>0 && (cat_levels[0].length>0 || cat_levels[1].length>0 || cat_levels[2].length>0 || cat_levels[3].length>0)) || cat_other.length>0" [hidden]="submitted">
-        <div class="card border-primary-nimble space-after">
+        <div *ngIf="instances.length > 1" class="card border-primary-nimble space-after">
             <div class="card-header text-white bg-primary-nimble">
                 Nimble Instances
             </div>
@@ -129,7 +129,7 @@
 						<span class="clickable" (click)="setCat('')"><i>Reset category selection</i></span>
 					</div>
 
-                    <div class="card border-primary-nimble mb-3">
+                    <div *ngIf="instances.length > 1" class="card border-primary-nimble mb-3">
                         <div class="card-header text-white bg-primary-nimble">
                             Nimble Instances
                         </div>
